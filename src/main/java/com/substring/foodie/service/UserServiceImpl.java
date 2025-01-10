@@ -5,6 +5,8 @@ import com.substring.foodie.entity.User;
 import com.substring.foodie.exception.ResourceNotFoundException;
 import com.substring.foodie.repository.UserRepo;
 import org.springframework.beans.BeanUtils;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -39,15 +41,13 @@ public class UserServiceImpl implements UserService{
     }
 
     @Override
-    public List<UserDto> getAll() {
-       List<User> users = userRepo.findAll();
-        //Converting each user entity to userDto using stream
-       List<UserDto> userDtos = users
-               .stream()
-               .map((user)-> convertUserToUserDto(user))
-               .toList();
+    public Page<UserDto> getAll(Pageable pageable){
 
-       return userDtos;
+       Page<User> userPage = userRepo.findAll(pageable);
+        //Converting each user entity to userDto using stream
+
+        // return after converting to Page<UserDto>
+       return userPage.map(user -> convertUserToUserDto(user));
     }
 
     @Override
