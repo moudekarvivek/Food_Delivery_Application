@@ -45,7 +45,6 @@ public class UserServiceImpl implements UserService{
 
        Page<User> userPage = userRepo.findAll(pageable);
         //Converting each user entity to userDto using stream
-
         // return after converting to Page<UserDto>
        return userPage.map(user -> convertUserToUserDto(user));
     }

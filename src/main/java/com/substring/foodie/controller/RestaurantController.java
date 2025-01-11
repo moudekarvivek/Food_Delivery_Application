@@ -1,7 +1,7 @@
 package com.substring.foodie.controller;
 
-import com.substring.foodie.dto.UserDto;
-import com.substring.foodie.service.UserService;
+import com.substring.foodie.dto.RestaurantDto;
+import com.substring.foodie.service.RestaurantService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -9,47 +9,41 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
-
 @RestController
-@RequestMapping("/api/v1/users")
-public class UserController {
+@RequestMapping("/api/restaurants")
+public class RestaurantController {
 
-    private UserService userService;
-
+    private RestaurantService restaurantService;
     //Constructor Injection
-    public UserController(UserService userService) {
-        this.userService = userService;
+    public RestaurantController(RestaurantService restaurantService) {
+        this.restaurantService = restaurantService;
     }
 
-    //Create User
+    //Creating Restaurant
     @PostMapping
-    public ResponseEntity<UserDto> create(
-            @RequestBody UserDto userDto
+    public ResponseEntity<RestaurantDto> create(
+            @RequestBody RestaurantDto restaurantDto
     ){
-        UserDto userDtoResult = userService.saveUser(userDto);
-        return ResponseEntity.ok(userDtoResult);
+        RestaurantDto restaurantDtoResult = restaurantService.saveRestaurant(restaurantDto);
+        return ResponseEntity.ok(restaurantDtoResult);
     }
 
-    //Get All User
+    //Get All Restaurant
     @GetMapping
-    public ResponseEntity<Page<UserDto>> findAll(
+    public ResponseEntity<Page<RestaurantDto>> findAll(
             @RequestParam(value = "page",required = false,defaultValue = "0") int page,
             @RequestParam(value = "size",required = false,defaultValue = "10") int size,
             @RequestParam(value = "sortBy",required = false,defaultValue = "createdDate") String sortBy,
             @RequestParam(value = "sortDir",required = false,defaultValue = "desc") String sortDir
     ){
         Sort sort = sortDir.equalsIgnoreCase("asc") ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
-
         Pageable pageable = PageRequest.of(page, size, sort);
 
-        return ResponseEntity.ok(userService.getAll(pageable));
+        return ResponseEntity.ok(restaurantService.getAll(pageable));
     }
 
-    //Get user by id
-    @GetMapping("/{userId}")
-    public ResponseEntity<UserDto> findById(@PathVariable("userId") String id){
-
-        return ResponseEntity.ok(userService.getUserById(id));
+    @GetMapping("/{restaurantId}")
+    public ResponseEntity<RestaurantDto> findById(@PathVariable("restaurantId") String id){
+        return ResponseEntity.ok(restaurantService.getRestaurantById(id));
     }
 }
