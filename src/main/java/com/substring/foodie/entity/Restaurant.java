@@ -15,11 +15,14 @@ public class Restaurant {
     @Id
     private String id;
     private String name;
+    @Lob
+    private String description;
     private String address;
     private LocalTime openTime;
     private LocalTime closeTIme;
-
     private Boolean open = true;
+   //TODO:
+    private String banner;
 
     @ManyToOne
     private User user;

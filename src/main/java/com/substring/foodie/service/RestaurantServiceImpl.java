@@ -4,6 +4,9 @@ import com.substring.foodie.dto.RestaurantDto;
 import com.substring.foodie.entity.Restaurant;
 import com.substring.foodie.exception.ResourceNotFoundException;
 import com.substring.foodie.repository.RestaurantRepo;
+import com.substring.foodie.utils.Helper;
+import jakarta.persistence.Id;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.BeanUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -17,42 +20,54 @@ import java.util.UUID;
 public class RestaurantServiceImpl implements RestaurantService {
 
     private RestaurantRepo restaurantRepo;
+    private ModelMapper modelMapper;
 
     //Constructor Injection
-    public RestaurantServiceImpl(RestaurantRepo restaurantRepo) {
+    public RestaurantServiceImpl(RestaurantRepo restaurantRepo, ModelMapper modelMapper) {
         this.restaurantRepo = restaurantRepo;
+        this.modelMapper = modelMapper;
     }
 
     @Override
     public RestaurantDto saveRestaurant(RestaurantDto restaurantDto) {
         // Generate New id for Restaurant
-        restaurantDto.setId(UUID.randomUUID().toString());
+        restaurantDto.setId(Helper.generateRandomId());
 
-        Restaurant restaurant = convertRestaurantDtoToRestaurant(restaurantDto);
-
+        Restaurant restaurant = modelMapper.map(restaurantDto, Restaurant.class);
         //Saving Restaurant to the database
         Restaurant savedRestaurant = restaurantRepo.save(restaurant);
 
-        return convertRestaurantToRestaurantDto(savedRestaurant);
+        return modelMapper.map(savedRestaurant, RestaurantDto.class);
     }
 
     @Override
     public RestaurantDto updateRestaurant(RestaurantDto restaurantDto, String restaurantId) {
-        return null;
+
+        Restaurant restaurant = restaurantRepo.findById(restaurantId)
+                .orElseThrow(() -> new ResourceNotFoundException("Restaurant Not Found"));
+       restaurant.setName(restaurantDto.getName());
+       restaurant.setAddress(restaurantDto.getAddress());
+       restaurant.setDescription(restaurantDto.getDescription());
+       restaurant.setOpenTime(restaurantDto.getOpenTime());
+       restaurant.setCloseTIme(restaurantDto.getCloseTIme());
+       restaurant.setOpen(restaurantDto.getOpen());
+
+       Restaurant savedEntity = restaurantRepo.save(restaurant);
+        return modelMapper.map(savedEntity, RestaurantDto.class);
     }
 
     @Override
     public Page<RestaurantDto> getAll(Pageable pageable) {
         Page<Restaurant> restaurantPage = restaurantRepo.findAll(pageable);
 
-        return restaurantPage.map(restaurant -> convertRestaurantToRestaurantDto(restaurant));
+        return restaurantPage.map(restaurant -> modelMapper.map(restaurant, RestaurantDto.class));
     }
 
     @Override
     public List<RestaurantDto> getRestaurantByName(String restaurantName) {
-        return restaurantRepo.findByName(restaurantName)
+        return restaurantRepo.findByNameContainingIgnoreCase(restaurantName)
                 .stream()
-                .map((restaurant) -> convertRestaurantToRestaurantDto(restaurant))
+                .map((restaurant) -> modelMapper.map(restaurant, RestaurantDto.class))
                 .toList();
     }
 
@@ -60,8 +75,7 @@ public class RestaurantServiceImpl implements RestaurantService {
     public RestaurantDto getRestaurantById(String restaurantId) {
        Restaurant restaurant = restaurantRepo.findById(restaurantId)
                .orElseThrow(() -> new ResourceNotFoundException("User Not Found"));
-
-       return convertRestaurantToRestaurantDto(restaurant);
+       return modelMapper.map(restaurant, RestaurantDto.class);
     }
 
     @Override
@@ -72,14 +86,14 @@ public class RestaurantServiceImpl implements RestaurantService {
         restaurantRepo.delete(restaurant);
     }
 
-    public Restaurant convertRestaurantDtoToRestaurant(RestaurantDto restaurantDto){
-        Restaurant restaurant = new Restaurant();
-        BeanUtils.copyProperties(restaurant, restaurantDto);
-        return restaurant;
-    }
-    public RestaurantDto convertRestaurantToRestaurantDto(Restaurant restaurant){
-        RestaurantDto restaurantDto = new RestaurantDto();
-        BeanUtils.copyProperties(restaurantDto, restaurant);
-        return restaurantDto;
-    }
+//    public Restaurant convertRestaurantDtoToRestaurant(RestaurantDto restaurantDto){
+//        Restaurant restaurant = new Restaurant();
+//        BeanUtils.copyProperties(restaurant, restaurantDto);
+//        return restaurant;
+//    }
+//    public RestaurantDto convertRestaurantToRestaurantDto(Restaurant restaurant){
+//        RestaurantDto restaurantDto = new RestaurantDto();
+//        BeanUtils.copyProperties(restaurantDto, restaurant);
+//        return restaurantDto;
+//    }
 }

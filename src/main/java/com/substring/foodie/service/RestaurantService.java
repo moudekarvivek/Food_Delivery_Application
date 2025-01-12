@@ -3,6 +3,7 @@ package com.substring.foodie.service;
 import com.substring.foodie.dto.RestaurantDto;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
