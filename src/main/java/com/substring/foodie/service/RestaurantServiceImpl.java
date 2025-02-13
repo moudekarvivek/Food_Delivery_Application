@@ -1,5 +1,6 @@
 package com.substring.foodie.service;
 
+import com.substring.foodie.dto.FileData;
 import com.substring.foodie.dto.RestaurantDto;
 import com.substring.foodie.entity.Restaurant;
 import com.substring.foodie.exception.ResourceNotFoundException;
@@ -8,22 +9,32 @@ import com.substring.foodie.utils.Helper;
 import jakarta.persistence.Id;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.lang.module.ResolutionException;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
 @Service
 public class RestaurantServiceImpl implements RestaurantService {
 
+    @Value("${restaurant.file.path}")
+    private String bannerFolderPath;
+
+    private FileService fileService;
+
     private RestaurantRepo restaurantRepo;
     private ModelMapper modelMapper;
 
     //Constructor Injection
-    public RestaurantServiceImpl(RestaurantRepo restaurantRepo, ModelMapper modelMapper) {
+    public RestaurantServiceImpl(FileService fileService, RestaurantRepo restaurantRepo, ModelMapper modelMapper) {
+        this.fileService = fileService;
         this.restaurantRepo = restaurantRepo;
         this.modelMapper = modelMapper;
     }
@@ -34,7 +45,7 @@ public class RestaurantServiceImpl implements RestaurantService {
         restaurantDto.setId(Helper.generateRandomId());
 
         Restaurant restaurant = modelMapper.map(restaurantDto, Restaurant.class);
-        //Saving Restaurant to the database
+        //Saving Restaurant to the database convert DTO to Entity
         Restaurant savedRestaurant = restaurantRepo.save(restaurant);
 
         return modelMapper.map(savedRestaurant, RestaurantDto.class);
@@ -84,6 +95,25 @@ public class RestaurantServiceImpl implements RestaurantService {
                 .orElseThrow(() -> new ResourceNotFoundException("User Not Found"));
 
         restaurantRepo.delete(restaurant);
+    }
+
+    @Override
+    public RestaurantDto uploadBanner(MultipartFile file, String id) throws IOException {
+
+        //Upload the File:
+
+        //abc.png
+        String fileName =  file.getOriginalFilename();
+        String fileExtension = fileName.substring(fileName.lastIndexOf("."));
+        String newFileName =  new Date().getTime()+ fileExtension;
+
+        FileData fileData = fileService.uploadFile(file, bannerFolderPath + newFileName);
+
+
+        Restaurant restaurant = restaurantRepo.findById(id).orElseThrow(() -> new ResourceNotFoundException("Resource Not Found"));
+        restaurant.setBanner(fileData.getFileName());
+        restaurantRepo.save(restaurant);
+        return modelMapper.map(restaurant, RestaurantDto.class);
     }
 
 //    public Restaurant convertRestaurantDtoToRestaurant(RestaurantDto restaurantDto){

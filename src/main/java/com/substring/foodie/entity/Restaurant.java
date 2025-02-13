@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 @Entity
@@ -23,6 +24,7 @@ public class Restaurant {
     private Boolean open = true;
    //TODO:
     private String banner;
+    private LocalDateTime createdDate;
 
     @ManyToOne
     private User user;
